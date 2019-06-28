@@ -11,6 +11,8 @@
 
 from .base_date_time import BaseDateTime
 # pylint: disable=line-too-long
+
+
 class PortugueseDateTime:
     TillRegex = f'(?<till>ate|as|às|até|ateh|a|ao|--|-|—|——)(\\s+(o|[aà](s)?))?'
     AndRegex = f'(?<and>e|e\\s*o|--|-|—|——)'
@@ -226,6 +228,7 @@ class PortugueseDateTime:
                          ("segundo", 1),
                          ("segs", 1),
                          ("seg", 1)])
+    SpecialYearPrefixesMap = dict([("", "")])
     SeasonMap = dict([("primavera", "SP"),
                       ("verao", "SU"),
                       ("verão", "SU"),

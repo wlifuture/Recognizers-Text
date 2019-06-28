@@ -10,22 +10,24 @@ namespace Microsoft.Recognizers.Text.DateTime.Dutch
     public class DutchDatePeriodParserConfiguration : BaseOptionsConfiguration, IDatePeriodParserConfiguration
     {
         public static readonly Regex NextPrefixRegex =
-            new Regex(DateTimeDefinitions.NextPrefixRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.NextPrefixRegex, RegexFlags);
 
         public static readonly Regex PreviousPrefixRegex =
-            new Regex(DateTimeDefinitions.PreviousPrefixRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.PreviousPrefixRegex, RegexFlags);
 
         public static readonly Regex ThisPrefixRegex =
-            new Regex(DateTimeDefinitions.ThisPrefixRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.ThisPrefixRegex, RegexFlags);
 
         public static readonly Regex AfterNextSuffixRegex =
-            new Regex(DateTimeDefinitions.AfterNextSuffixRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.AfterNextSuffixRegex, RegexFlags);
 
         public static readonly Regex RelativeRegex =
-            new Regex(DateTimeDefinitions.RelativeRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.RelativeRegex, RegexFlags);
 
         public static readonly Regex UnspecificEndOfRangeRegex =
-            new Regex(DateTimeDefinitions.UnspecificEndOfRangeRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.UnspecificEndOfRangeRegex, RegexFlags);
+
+        private const RegexOptions RegexFlags = RegexOptions.Singleline | RegexOptions.ExplicitCapture;
 
         public DutchDatePeriodParserConfiguration(ICommonDateTimeParserConfiguration config)
             : base(config)
@@ -82,6 +84,7 @@ namespace Microsoft.Recognizers.Text.DateTime.Dutch
             DayOfMonth = config.DayOfMonth;
             MonthOfYear = config.MonthOfYear;
             SeasonMap = config.SeasonMap;
+            SpecialYearPrefixesMap = config.SpecialYearPrefixesMap;
             WrittenDecades = config.WrittenDecades;
             Numbers = config.Numbers;
             SpecialDecadeCases = config.SpecialDecadeCases;
@@ -217,6 +220,8 @@ namespace Microsoft.Recognizers.Text.DateTime.Dutch
 
         public IImmutableDictionary<string, string> SeasonMap { get; }
 
+        public IImmutableDictionary<string, string> SpecialYearPrefixesMap { get; }
+
         public IImmutableDictionary<string, int> WrittenDecades { get; }
 
         public IImmutableDictionary<string, int> Numbers { get; }
@@ -229,7 +234,7 @@ namespace Microsoft.Recognizers.Text.DateTime.Dutch
         {
             var swift = 0;
 
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
 
             if (AfterNextSuffixRegex.IsMatch(trimmedText))
             {
@@ -251,7 +256,7 @@ namespace Microsoft.Recognizers.Text.DateTime.Dutch
         {
             var swift = -10;
 
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
 
             if (AfterNextSuffixRegex.IsMatch(trimmedText))
             {
@@ -275,46 +280,46 @@ namespace Microsoft.Recognizers.Text.DateTime.Dutch
 
         public bool IsFuture(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.FutureTerms.Any(o => trimmedText.StartsWith(o));
         }
 
         public bool IsLastCardinal(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.LastCardinalTerms.Any(o => trimmedText.Equals(o));
         }
 
         public bool IsMonthOnly(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.MonthTerms.Any(o => trimmedText.EndsWith(o)) ||
                    (MonthTermsPadded.Any(o => trimmedText.Contains(o)) && AfterNextSuffixRegex.IsMatch(trimmedText));
         }
 
         public bool IsMonthToDate(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.MonthToDateTerms.Any(o => trimmedText.Equals(o));
         }
 
         public bool IsWeekend(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.WeekendTerms.Any(o => trimmedText.EndsWith(o)) ||
                    (WeekendTermsPadded.Any(o => trimmedText.Contains(o)) && AfterNextSuffixRegex.IsMatch(trimmedText));
         }
 
         public bool IsWeekOnly(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.WeekTerms.Any(o => trimmedText.EndsWith(o)) ||
                    (WeekTermsPadded.Any(o => trimmedText.Contains(o)) && AfterNextSuffixRegex.IsMatch(trimmedText));
         }
 
         public bool IsYearOnly(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.YearTerms.Any(o => trimmedText.EndsWith(o)) ||
                    (YearTermsPadded.Any(o => trimmedText.Contains(o)) && AfterNextSuffixRegex.IsMatch(trimmedText)) ||
                    (DateTimeDefinitions.GenericYearTerms.Any(o => trimmedText.EndsWith(o)) && UnspecificEndOfRangeRegex.IsMatch(trimmedText));
@@ -322,7 +327,7 @@ namespace Microsoft.Recognizers.Text.DateTime.Dutch
 
         public bool IsYearToDate(string text)
         {
-            var trimmedText = text.Trim().ToLowerInvariant();
+            var trimmedText = text.Trim();
             return DateTimeDefinitions.YearToDateTerms.Any(o => trimmedText.Equals(o));
         }
     }

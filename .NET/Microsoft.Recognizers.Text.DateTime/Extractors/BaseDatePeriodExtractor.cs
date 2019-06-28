@@ -59,8 +59,8 @@ namespace Microsoft.Recognizers.Text.DateTime
 
             foreach (var duration in durations)
             {
-                var beforeStr = text.Substring(0, duration.Start).ToLowerInvariant();
-                var afterStr = text.Substring(duration.Start + duration.Length).ToLowerInvariant();
+                var beforeStr = text.Substring(0, duration.Start);
+                var afterStr = text.Substring(duration.Start + duration.Length);
 
                 if (string.IsNullOrWhiteSpace(beforeStr) && string.IsNullOrWhiteSpace(afterStr))
                 {
@@ -74,8 +74,9 @@ namespace Microsoft.Recognizers.Text.DateTime
                 if (match.Success)
                 {
                     var startToken = match.Index;
-                    var matchDate = config.DateUnitRegex.Match(text.Substring(duration.Start, duration.Length));
-                    var matchTime = config.TimeUnitRegex.Match(text.Substring(duration.Start, duration.Length));
+                    var durationStr = text.Substring(duration.Start, duration.Length);
+                    var matchDate = config.DateUnitRegex.Match(durationStr);
+                    var matchTime = config.TimeUnitRegex.Match(durationStr);
 
                     if (matchDate.Success && !matchTime.Success)
                     {
@@ -367,13 +368,25 @@ namespace Microsoft.Recognizers.Text.DateTime
                 {
                     var yearMatches = this.config.YearRegex.Matches(match.Value);
                     var allDigitYear = true;
+                    var isValidYear = true;
 
                     foreach (Match yearMatch in yearMatches)
                     {
-                        if (yearMatch.Length != Constants.FourDigitsYearLength)
+                        var year = config.DatePointExtractor.GetYearFromText(yearMatch);
+                        if (!(year >= Constants.MinYearNum && year <= Constants.MaxYearNum))
+                        {
+                            isValidYear = false;
+                            break;
+                        }
+                        else if (yearMatch.Length != Constants.FourDigitsYearLength)
                         {
                             allDigitYear = false;
                         }
+                    }
+
+                    if (!isValidYear)
+                    {
+                        continue;
                     }
 
                     // Cases like "2010-2015"
@@ -544,7 +557,7 @@ namespace Microsoft.Recognizers.Text.DateTime
                     continue;
                 }
 
-                var middleStr = text.Substring(middleBegin, middleEnd - middleBegin).Trim().ToLowerInvariant();
+                var middleStr = text.Substring(middleBegin, middleEnd - middleBegin).Trim();
 
                 if (config.TillRegex.IsExactMatch(middleStr, trim: true))
                 {
@@ -552,9 +565,9 @@ namespace Microsoft.Recognizers.Text.DateTime
                     var periodEnd = (extractionResults[idx + 1].Start ?? 0) + (extractionResults[idx + 1].Length ?? 0);
 
                     // handle "from/between" together with till words (till/until/through...)
-                    var beforeStr = text.Substring(0, periodBegin).Trim().ToLowerInvariant();
-                    if (this.config.GetFromTokenIndex(beforeStr, out int fromIndex)
-                        || this.config.GetBetweenTokenIndex(beforeStr, out fromIndex))
+                    var beforeStr = text.Substring(0, periodBegin).Trim();
+                    if (this.config.GetFromTokenIndex(beforeStr, out int fromIndex) ||
+                        this.config.GetBetweenTokenIndex(beforeStr, out fromIndex))
                     {
                         periodBegin = fromIndex;
                     }
@@ -572,7 +585,7 @@ namespace Microsoft.Recognizers.Text.DateTime
                     var periodEnd = (extractionResults[idx + 1].Start ?? 0) + (extractionResults[idx + 1].Length ?? 0);
 
                     // handle "between...and..." case
-                    var beforeStr = text.Substring(0, periodBegin).Trim().ToLowerInvariant();
+                    var beforeStr = text.Substring(0, periodBegin).Trim();
                     if (this.config.GetBetweenTokenIndex(beforeStr, out int beforeIndex))
                     {
                         periodBegin = beforeIndex;

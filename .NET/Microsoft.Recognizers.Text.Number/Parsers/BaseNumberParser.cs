@@ -61,7 +61,7 @@ namespace Microsoft.Recognizers.Text.Number
         public virtual ParseResult Parse(ExtractResult extResult)
         {
             // Check if the parser is configured to support specific types
-            if (SupportedTypes != null && !SupportedTypes.Any(t => extResult.Type.Equals(t, StringComparison.InvariantCulture)))
+            if (SupportedTypes != null && !SupportedTypes.Any(t => extResult.Type.Equals(t, StringComparison.Ordinal)))
             {
                 return null;
             }
@@ -80,7 +80,7 @@ namespace Microsoft.Recognizers.Text.Number
             if (matchNegative.Success)
             {
                 isNegative = true;
-                extResult.Text = extResult.Text.Substring(matchNegative.Groups[1].Length);
+                extResult.Text = extResult.Text.Substring(matchNegative.Groups["negTerm"].Length);
             }
 
             // Assign resolution value
@@ -151,7 +151,7 @@ namespace Microsoft.Recognizers.Text.Number
                 if (isNegative)
                 {
                     // Recover the original extracted Text
-                    ret.Text = matchNegative.Groups[1].Value + extResult.Text;
+                    ret.Text = matchNegative.Groups["negTerm"].Value + extResult.Text;
                     ret.Value = -(double)ret.Value;
                 }
 
@@ -161,11 +161,18 @@ namespace Microsoft.Recognizers.Text.Number
             // Add "offset" and "relativeTo" for ordinal
             if (!string.IsNullOrEmpty(ret.Type) && ret.Type.Contains(Constants.MODEL_ORDINAL))
             {
-                if ((this.Config.Options & NumberOptions.SuppressExtendedTypes) == 0 && Config.RelativeReferenceOffsetMap.ContainsKey(extResult.Text) &&
-                    Config.RelativeReferenceRelativeToMap.ContainsKey(extResult.Text))
+                if ((this.Config.Options & NumberOptions.SuppressExtendedTypes) == 0 && ret.Metadata.IsOrdinalRelative)
                 {
-                    ret.Metadata.Offset = Config.RelativeReferenceOffsetMap[extResult.Text];
-                    ret.Metadata.RelativeTo = Config.RelativeReferenceRelativeToMap[extResult.Text];
+                    var offset = Config.RelativeReferenceOffsetMap[extResult.Text];
+                    var relativeTo = Config.RelativeReferenceRelativeToMap[extResult.Text];
+
+                    ret.Metadata.Offset = offset;
+                    ret.Metadata.RelativeTo = relativeTo;
+
+                    // Add value for ordinal.relative
+                    string sign = offset[0].Equals('-') ? string.Empty : "+";
+                    ret.Value = string.Concat(relativeTo, sign, offset);
+                    ret.ResolutionStr = GetResolutionStr(ret.Value);
                 }
                 else
                 {
@@ -304,8 +311,7 @@ namespace Microsoft.Recognizers.Text.Number
             // Handling cases like "last", "next one", "previous one"
             if ((this.Config.Options & NumberOptions.SuppressExtendedTypes) == 0)
             {
-                if (Config.RelativeReferenceOffsetMap.ContainsKey(extResult.Text) &&
-                    Config.RelativeReferenceRelativeToMap.ContainsKey(extResult.Text))
+                if (extResult.Metadata != null && extResult.Metadata.IsOrdinalRelative)
                 {
                     return result;
                 }
@@ -638,12 +644,17 @@ namespace Microsoft.Recognizers.Text.Number
 
         private static string DetermineType(ExtractResult er)
         {
+            if (!string.IsNullOrEmpty(er.Type) && er.Type.Contains(Constants.MODEL_ORDINAL))
+            {
+                return er.Metadata.IsOrdinalRelative ? Constants.MODEL_ORDINAL_RELATIVE : Constants.MODEL_ORDINAL;
+            }
+
             var data = er.Data as string;
             var subType = string.Empty;
 
             if (!string.IsNullOrEmpty(data))
             {
-                if (data.StartsWith(Constants.FRACTION_PREFIX, StringComparison.InvariantCulture))
+                if (data.StartsWith(Constants.FRACTION_PREFIX, StringComparison.Ordinal))
                 {
                     subType = Constants.FRACTION;
                 }
@@ -651,11 +662,11 @@ namespace Microsoft.Recognizers.Text.Number
                 {
                     subType = Constants.POWER;
                 }
-                else if (data.StartsWith(Constants.INTEGER_PREFIX, StringComparison.InvariantCulture))
+                else if (data.StartsWith(Constants.INTEGER_PREFIX, StringComparison.Ordinal))
                 {
                     subType = Constants.INTEGER;
                 }
-                else if (data.StartsWith(Constants.DOUBLE_PREFIX, StringComparison.InvariantCulture))
+                else if (data.StartsWith(Constants.DOUBLE_PREFIX, StringComparison.Ordinal))
                 {
                     subType = Constants.DECIMAL;
                 }
@@ -801,12 +812,12 @@ namespace Microsoft.Recognizers.Text.Number
                         }
                         else if (Config.CardinalNumberMap.ContainsKey(matchStr))
                         {
-                            if (oldSym.Equals("-", StringComparison.InvariantCulture))
+                            if (oldSym.Equals("-", StringComparison.Ordinal))
                             {
                                 var sum = tempStack.Pop() + matchValue;
                                 tempStack.Push(sum);
                             }
-                            else if (oldSym.Equals(Config.WrittenIntegerSeparatorTexts.First(), StringComparison.InvariantCulture) || tempStack.Count() < 2)
+                            else if (oldSym.Equals(Config.WrittenIntegerSeparatorTexts.First(), StringComparison.Ordinal) || tempStack.Count() < 2)
                             {
                                 tempStack.Push(matchValue);
                             }

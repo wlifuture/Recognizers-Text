@@ -17,6 +17,9 @@ namespace Microsoft.Recognizers.Text.DateTime
         public const string SYS_DATETIME_DATETIMEALT = "datetimealt";
         public const string SYS_DATETIME_TIMEZONE = "timezone";
 
+        // SourceEntity Types
+        public const string SYS_DATETIME_DATETIMEPOINT = "datetimepoint";
+
         // Model Name
         public const string MODEL_DATETIME = "datetime";
 
@@ -173,6 +176,7 @@ namespace Microsoft.Recognizers.Text.DateTime
 
         public static readonly int MaxTwoDigitYearFutureNum = int.Parse(BaseDateTime.MaxTwoDigitYearFutureNum);
         public static readonly int MinTwoDigitYearPastNum = int.Parse(BaseDateTime.MinTwoDigitYearPastNum);
+        public static readonly System.DateTime InvalidDate = default(System.DateTime);
 
         // Timex non-constant
         public static readonly string[] DatePeriodTimexSplitter = { ",", "(", ")" };

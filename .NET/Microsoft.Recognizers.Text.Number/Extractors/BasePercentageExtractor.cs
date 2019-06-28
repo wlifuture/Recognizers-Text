@@ -112,7 +112,7 @@ namespace Microsoft.Recognizers.Text.Number
             foreach (var regexStr in regexStrs)
             {
                 // var sl = "(?=\\b)(" + regexStr + ")(?=(s?\\b))";
-                var options = RegexOptions.Singleline;
+                var options = RegexOptions.Singleline | RegexOptions.ExplicitCapture;
                 if (ignoreCase)
                 {
                     options = options | RegexOptions.IgnoreCase;
@@ -238,7 +238,7 @@ namespace Microsoft.Recognizers.Text.Number
                 {
                     if (match[j] == 0)
                     {
-                        if (percentModeEnabled && extraction.Data.ToString().StartsWith("Frac", StringComparison.InvariantCulture))
+                        if (percentModeEnabled && extraction.Data.ToString().StartsWith("Frac", StringComparison.Ordinal))
                         {
                             match[j] = -(i + 1);
                         }

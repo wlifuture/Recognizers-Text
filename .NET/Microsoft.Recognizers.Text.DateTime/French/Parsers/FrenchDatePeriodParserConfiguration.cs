@@ -10,19 +10,21 @@ namespace Microsoft.Recognizers.Text.DateTime.French
     {
         // @TODO move to resources - French - relative
         public static readonly Regex NextPrefixRegex =
-            new Regex(@"(prochain|prochaine)\b", RegexOptions.Singleline);
+            new Regex(@"(prochain|prochaine)\b", RegexFlags);
 
         public static readonly Regex PastPrefixRegex =
-            new Regex(@"(dernier)\b", RegexOptions.Singleline);
+            new Regex(@"(dernier)\b", RegexFlags);
 
         public static readonly Regex ThisPrefixRegex =
-            new Regex(@"(ce|cette)\b", RegexOptions.Singleline);
+            new Regex(@"(ce|cette)\b", RegexFlags);
 
         public static readonly Regex RelativeRegex =
-            new Regex(DateTimeDefinitions.RelativeRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.RelativeRegex, RegexFlags);
 
         public static readonly Regex UnspecificEndOfRangeRegex =
-            new Regex(DateTimeDefinitions.UnspecificEndOfRangeRegex, RegexOptions.Singleline);
+            new Regex(DateTimeDefinitions.UnspecificEndOfRangeRegex, RegexFlags);
+
+        private const RegexOptions RegexFlags = RegexOptions.Singleline | RegexOptions.ExplicitCapture;
 
         public FrenchDatePeriodParserConfiguration(ICommonDateTimeParserConfiguration config)
             : base(config)
@@ -83,6 +85,7 @@ namespace Microsoft.Recognizers.Text.DateTime.French
             DayOfMonth = config.DayOfMonth;
             MonthOfYear = config.MonthOfYear;
             SeasonMap = config.SeasonMap;
+            SpecialYearPrefixesMap = config.SpecialYearPrefixesMap;
             WrittenDecades = config.WrittenDecades;
             SpecialDecadeCases = config.SpecialDecadeCases;
         }
@@ -204,6 +207,8 @@ namespace Microsoft.Recognizers.Text.DateTime.French
         public IImmutableDictionary<string, int> MonthOfYear { get; }
 
         public IImmutableDictionary<string, string> SeasonMap { get; }
+
+        public IImmutableDictionary<string, string> SpecialYearPrefixesMap { get; }
 
         public IImmutableDictionary<string, int> WrittenDecades { get; }
 
